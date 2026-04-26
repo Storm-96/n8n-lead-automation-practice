@@ -1,0 +1,214 @@
+{
+  "name": "Important mail notification",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "69d906b1-1f95-4b4b-8367-3f6f80e82f70",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AtRrJULEbiVcJ9c4",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15b644ec-a3cd-4d04-b114-944dd7f2fcc9",
+              "name": "From",
+              "value": "={{ $json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "b98710e8-81f8-47a1-8947-6e9a0c0b180f",
+              "name": "Subject",
+              "value": "={{ $json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "27c2713f-7a66-452a-803e-07339cb11cb5",
+              "name": "Message",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "bc53a62f-2777-4c65-8f3c-2a525e2b40dc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Classify this email.\n\nSender: {{ $json.From }}\nSubject: {{ $json.Subject }}\nBody: {{ $json.Message }}\n\nRules:\n- IMPORTANT: real human, client, job, money, urgent, conversation\n- NOT IMPORTANT: ads, newsletters, promotions, automated emails\n\nReply ONLY with:\nIMPORTANT\nor\nNOT IMPORTANT"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1da60d1b-6719-4e36-8e9b-3975d912acbc",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "sPP4KEavbXje4Vxc",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "22d7cdc5-d26a-4148-9bd1-1d6b0269d638",
+              "leftValue": "={{ $json.output[0].content[0].text }}",
+              "rightValue": "IMPORTANT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        0
+      ],
+      "id": "d494ca4a-1f3b-4168-8348-d6d015543f65",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "from": "+14155238886",
+        "to": "+8801871115176",
+        "toWhatsapp": true,
+        "message": "=📩 New Important Email  \n\nFrom: {{ $('Edit Fields').item.json.From }}\nSubject: {{ $('Edit Fields').item.json.Subject }}\n\nCheck your inbox.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -16
+      ],
+      "id": "77ee5103-4b12-4c4c-a5a7-bdb78f1dd219",
+      "name": "Send an SMS/MMS/WhatsApp message",
+      "credentials": {
+        "twilioApi": {
+          "id": "mS65gBJEJYLiULal",
+          "name": "Twilio account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send an SMS/MMS/WhatsApp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b21da08f-10af-4046-ac22-6e5af00a39cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "15b66c8656ff2fa125ceb6e8acc149809b5e70f2b1f8f22488d11c6ec877b659"
+  },
+  "id": "t7wlEzwEKS00I92s",
+  "tags": []
+}
