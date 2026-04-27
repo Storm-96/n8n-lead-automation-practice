@@ -6,7 +6,7 @@
         "pollTimes": {
           "item": [
             {
-              "mode": "everyMinute"
+              "hour": 9
             }
           ]
         },
@@ -73,12 +73,22 @@
         "responses": {
           "values": [
             {
-              "content": "=Classify this email.\n\nSender: {{ $json.From }}\nSubject: {{ $json.Subject }}\nBody: {{ $json.Message }}\n\nRules:\n- IMPORTANT: real human, client, job, money, urgent, conversation\n- NOT IMPORTANT: ads, newsletters, promotions, automated emails\n\nReply ONLY with:\nIMPORTANT\nor\nNOT IMPORTANT"
+              "role": "system",
+              "content": "=You are an expert email triage assistant. Your goal is to analyze incoming emails and determine if they require immediate attention.\n\nRules:\n1. Classify into: 'job_opportunity', 'client_inquiry', 'security_alert', 'personal', or 'spam'.\n2. Status is 'IMPORTANT' only for high-value human interactions or urgent security.\n3. ALWAYS return valid JSON. Do not include any conversational text."
+            },
+            {
+              "content": "=Classify this email.\n\nSender: {{ $json.From }}\nSubject: {{ $json.Subject }}\nBody: {{ $json.Message }}\n\nReturn ONLY this JSON format:\n{\n  \"status\": \"IMPORTANT or IGNORE\",\n  \"category\": \"category_name\",\n  \"reason\": \"one sentence explanation\",\n  \"confidence\": 0-100\n}"
             }
           ]
         },
         "builtInTools": {},
-        "options": {}
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
@@ -204,7 +214,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "b21da08f-10af-4046-ac22-6e5af00a39cc",
+  "versionId": "1905b0af-81cb-4f88-8b86-73963a8dabff",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "15b66c8656ff2fa125ceb6e8acc149809b5e70f2b1f8f22488d11c6ec877b659"
